@@ -1,0 +1,31 @@
+name: Flask CI
+on:
+  push:
+  pull_request:
+jobs:
+  build-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt ruff
+      - name: Compile and lint
+        run: |
+          python -m py_compile app.py
+          ruff check app.py tests/
+      - name: Build Docker image
+        run: docker build --pull -t aceest-fitness:${{ github.sha }} .
+      - name: Run pytest inside container
+        run: docker run --rm --entrypoint python aceest-fitness:${{ github.sha }} -m pytest tests/ -v
+      - name: Container health check
+        run: |
+          docker run -d --name aceest-smoke -p 5000:5000 aceest-fitness:${{ github.sha }}
+          trap 'docker logs aceest-smoke; docker rm -f aceest-smoke' EXIT
+          for attempt in $(seq 1 20); do
+            if python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=2)" 2>/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
