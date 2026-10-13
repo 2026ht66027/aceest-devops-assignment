@@ -1,5 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, url_for
 
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_mapping(SECRET_KEY="development-key-change-me", TESTING=False)
