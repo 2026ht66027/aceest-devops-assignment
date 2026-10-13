@@ -33,3 +33,7 @@ def test_delete_workout(client):
     client.post("/workouts", data={"name": "Cycling", "duration": "45"})
     response = client.post("/workouts/1/delete", follow_redirects=True)
     assert b"Cycling" not in response.data and b"Workout deleted." in response.data
+
+def test_intentional_failure_for_rollback_demo():
+    """Temporary test to demonstrate CI failure handling."""
+    assert 1 == 2, "Intentional failure for rollback demonstration"
